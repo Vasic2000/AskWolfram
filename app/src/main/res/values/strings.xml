@@ -1,3 +1,14 @@
 <resources>
-    <string name="app_name">NetoVoiceAssistent</string>
+    <string name="app_name">NetoVoiceAssist</string>
+
+    <string name="action_stop">Stop</string>
+    <string name="action_clear">Clear</string>
+
+    <string name="request_hint">What are you interested in?</string>
+
+    <string name="error_dont_understand">I don\'t understand, can you rephrase?</string>
+    <string name="error_voice_recognition_unavailable">Oice recognition unavailable</string>
+    <string name="error_something_went_wrong">Something went wrong</string>
+    <string name="error_tts_isnt_ready">TTS isn\'t ready</string>
+
 </resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Голосовой помощник</string>
+
+    <string name="action_stop">Стоп</string>
+    <string name="action_clear">Очистить</string>
+
+    <string name="request_hint">Что вы ищете?</string>
+
+    <string name="error_dont_understand">Я не понял. Можете повторить?</string>
+    <string name="error_voice_recognition_unavailable">Распознавание голоса недоступно</string>
+    <string name="error_something_went_wrong">Что-то пошло не так</string>
+    <string name="error_tts_isnt_ready">TTS недоступен</string>
+</resources>
