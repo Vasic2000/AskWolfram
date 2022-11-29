@@ -14,6 +14,8 @@ import com.google.android.material.textfield.TextInputEditText
 
 class MainActivity : AppCompatActivity() {
 
+//    My APPID: U9JVQP-HHHY4HXEL6
+
     val TAG = "MainActivity"
     lateinit var request: TextInputEditText
     lateinit var podsAdapter: SimpleAdapter

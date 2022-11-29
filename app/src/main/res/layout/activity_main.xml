@@ -23,18 +23,19 @@
         android:layout_height="wrap_content"
         android:layout_margin="12dp"
         app:layout_constraintTop_toBottomOf="@+id/toolbar"
-        tools:layout_editor_absoluteX="12dp" />
+        tools:layout_editor_absoluteX="12dp">
 
-    <com.google.android.material.textfield.TextInputEditText
-        android:id="@+id/text_input_edit"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="@string/request_hint"
-        android:imeOptions="actionDone"
-        android:inputType="text"
-        android:maxLines="1"
-        app:layout_constraintTop_toTopOf="@+id/text_input_layout"
-        tools:ignore="TouchTargetSizeCheck" />
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/text_input_edit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/request_hint"
+            android:imeOptions="actionDone"
+            android:inputType="text"
+            android:maxLines="1"
+            app:layout_constraintTop_toTopOf="@+id/text_input_layout"
+            tools:ignore="TouchTargetSizeCheck" />
+    </com.google.android.material.textfield.TextInputLayout>
 
     <ListView
         android:id="@+id/pods_list"
@@ -43,8 +44,8 @@
         android:layout_margin="12dp"
         android:divider="?android:attr/colorBackground"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/text_input_edit"
-        tools:listitem="@layout/item_pod"/>
+        app:layout_constraintTop_toBottomOf="@+id/text_input_layout"
+        tools:listitem="@layout/item_pod" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:src="@drawable/ic_baseline_keyboard_voice_24"
