@@ -10,7 +10,10 @@ import android.widget.ProgressBar
 import android.widget.SimpleAdapter
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
+//Библиотека вольфрам
+import com.wolfram.alpha.WAEngine
 
 class MainActivity : AppCompatActivity() {
 
@@ -20,6 +23,8 @@ class MainActivity : AppCompatActivity() {
     lateinit var request: TextInputEditText
     lateinit var podsAdapter: SimpleAdapter
     lateinit var progressBar: ProgressBar
+
+    lateinit var waEngine: WAEngine
 
     val pods = mutableListOf<HashMap<String, String>>(
         HashMap<String, String>().apply {
@@ -45,6 +50,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         initViews()
+        initWolframEngine()
     }
 
     private fun initViews() {
@@ -70,6 +76,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         progressBar = findViewById(R.id.progressBar)
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -89,5 +96,20 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    fun initWolframEngine() {
+        waEngine = WAEngine()
+        waEngine.appID = "U9JVQP-HHHY4HXEL6"
+        waEngine.addFormat("plaintext")
+    }
+
+    fun showSnackBar(message: String) {
+        Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_INDEFINITE).apply {
+            setAction(android.R.string.ok) {
+                dismiss()
+            }
+            show()
+        }
     }
 }
