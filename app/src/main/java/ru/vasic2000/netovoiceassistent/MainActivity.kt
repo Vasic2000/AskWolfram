@@ -154,7 +154,6 @@ class MainActivity : AppCompatActivity() {
                         requestText.error = getString(R.string.error_dont_understand)
                         return@withContext
                     }
-                }
 
 //                Если всё сошлось - собираю ответы
 
@@ -178,8 +177,7 @@ class MainActivity : AppCompatActivity() {
                 }
 //                Сообщить podsAdapter'у, что данные обновлены
                 podsAdapter.notifyDataSetChanged()
-
-
+                }
             }.onFailure { t ->
                 withContext(Dispatchers.Main) {
                     progressBar.visibility = View.GONE
