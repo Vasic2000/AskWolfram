@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.view.inputmethod.EditorInfo
 import android.widget.ListView
 import android.widget.ProgressBar
 import android.widget.SimpleAdapter
@@ -14,36 +16,25 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
 //Библиотека вольфрам
 import com.wolfram.alpha.WAEngine
+import com.wolfram.alpha.WAPlainText
+//Корутина. Аналог postOnUIThread
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
 
 //    My APPID: U9JVQP-HHHY4HXEL6
 
     val TAG = "MainActivity"
-    lateinit var request: TextInputEditText
+    lateinit var requestText: TextInputEditText
     lateinit var podsAdapter: SimpleAdapter
     lateinit var progressBar: ProgressBar
 
     lateinit var waEngine: WAEngine
 
-    val pods = mutableListOf<HashMap<String, String>>(
-        HashMap<String, String>().apply {
-            put("Title", "Title 1")
-            put("Content", "Content 1")
-        },
-        HashMap<String, String>().apply {
-            put("Title", "Title 2")
-            put("Content", "Content 2")
-        },
-        HashMap<String, String>().apply {
-            put("Title", "Title 3")
-            put("Content", "Content 3")
-        },
-        HashMap<String, String>().apply {
-            put("Title", "Title 4")
-            put("Content", "Content 4")
-        }
-    )
+    val pods = mutableListOf<HashMap<String, String>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,7 +47,24 @@ class MainActivity : AppCompatActivity() {
     private fun initViews() {
         val m_toolbar: MaterialToolbar = findViewById(R.id.toolbar)
         setSupportActionBar(m_toolbar)
-        request = findViewById(R.id.text_input_edit)
+
+        requestText = findViewById(R.id.text_input_edit)
+//      Обраьотка нажатия Ввода в поле requestInputText
+        requestText.setOnEditorActionListener { textView, i, keyEvent ->
+            if(i == EditorInfo.IME_ACTION_DONE) {
+                //  Выкинуть данные из списка
+                pods.clear()
+                //  Сообщить адаптеру, что он изменён
+                podsAdapter.notifyDataSetChanged()
+                //  Получить вопрос
+                val question = requestText.text.toString()
+                //  Спросить Вольфрам
+                askWolFrame(question)
+            }
+//          Спрятать клавиатуру после ввода текста
+            return@setOnEditorActionListener false
+        }
+
 
         val podsList: ListView = findViewById(R.id.pods_list)
 
@@ -88,6 +96,14 @@ class MainActivity : AppCompatActivity() {
         when(item.itemId) {
             R.id.action_clear -> {
                 Log.d(TAG, "action_clear")
+
+                // Почистить текстовое поле ввода
+                requestText.text?.clear()
+                // Почистить список
+                pods.clear()
+                // Сообщить адаптеру, что изменён список
+                podsAdapter.notifyDataSetChanged()
+
                 return true
             }
             R.id.action_stop -> {
@@ -110,6 +126,67 @@ class MainActivity : AppCompatActivity() {
                 dismiss()
             }
             show()
+        }
+    }
+
+    fun askWolFrame(request: String) {
+        progressBar.visibility = View.VISIBLE
+
+//             Сама корутина
+        CoroutineScope(Dispatchers.IO).launch() {
+//             Запрос
+            val querry = waEngine.createQuery().apply {
+                input = request
+            }
+//             Котлин обработка исключений Tray -> Catch
+            kotlin.runCatching {
+                waEngine.performQuery(querry)
+            }.onSuccess {result ->
+                withContext(Dispatchers.Main) {
+                    progressBar.visibility = View.GONE
+//                    Когда результат = ошибка
+                    if(result.isError) {
+                        showSnackBar(result.errorMessage)
+                        return@withContext
+                    }
+//                    Когда ошибка была в запросе
+                    if(!result.isSuccess) {
+                        requestText.error = getString(R.string.error_dont_understand)
+                        return@withContext
+                    }
+                }
+
+//                Если всё сошлось - собираю ответы
+
+                for(pod in result.pods) {
+                    // Ошибка - следующий элемент
+                    if(pod.isError) continue
+
+                    val content = java.lang.StringBuilder()
+                    for(subpod in pod.subpods) {
+                        for(element in subpod.contents) {
+                            if(element is WAPlainText) {
+                                content.append(element.text)
+                            }
+                        }
+                    }
+                    pods.add(0, HashMap<String, String>().apply() {
+                        put("Title", pod.title)
+                        put("Content", content.toString())
+                    })
+
+                }
+//                Сообщить podsAdapter'у, что данные обновлены
+                podsAdapter.notifyDataSetChanged()
+
+
+            }.onFailure { t ->
+                withContext(Dispatchers.Main) {
+                    progressBar.visibility = View.GONE
+//             Если месседж не нулл - то месседж, иначе нашу ошибку "Что-то пошло не так"
+                    showSnackBar(t.message ?: getString(R.string.error_something_went_wrong))
+                }
+            }
         }
     }
 }
