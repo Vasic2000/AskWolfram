@@ -2,6 +2,7 @@ package ru.vasic2000.netovoiceassistent
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -22,6 +23,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.*
+import kotlin.collections.HashMap
 
 class MainActivity : AppCompatActivity() {
 
@@ -36,12 +39,27 @@ class MainActivity : AppCompatActivity() {
 
     val pods = mutableListOf<HashMap<String, String>>()
 
+    lateinit var textToSpeech: TextToSpeech
+    var isTtsReady: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         initViews()
         initWolframEngine()
+        initTTS()
+    }
+
+    private fun initTTS() {
+        textToSpeech = TextToSpeech(this) {code ->
+            if(code != TextToSpeech.SUCCESS) {
+                Log.e(TAG, "TTS error code: $code")
+                showSnackBar(getString(R.string.error_tts_isnt_ready))
+            }
+            isTtsReady = true
+            textToSpeech.language = Locale.UK
+        }
     }
 
     private fun initViews() {
@@ -78,6 +96,14 @@ class MainActivity : AppCompatActivity() {
 
         podsList.adapter = podsAdapter
 
+        podsList.setOnItemClickListener {parent, view, position, id ->
+            if(isTtsReady) {
+                val title = pods[position]["Title"]
+                val content = pods[position]["Content"]
+                textToSpeech.speak(content, TextToSpeech.QUEUE_FLUSH, null, title)
+            }
+        }
+
         val voiceInputButton : FloatingActionButton = findViewById(R.id.voice_input_button)
         voiceInputButton.setOnClickListener {
             Log.d(TAG, "FAB pressed")
@@ -107,6 +133,9 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
             R.id.action_stop -> {
+                if(isTtsReady) {
+                    textToSpeech.stop()
+                }
                 Log.d(TAG, "action_stop")
                 return true
             }
