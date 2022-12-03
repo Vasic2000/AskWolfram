@@ -1,7 +1,9 @@
 package ru.vasic2000.netovoiceassistent
 
+//Библиотека вольфрам
+//Корутина. Аналог postOnUIThread
+import android.R.attr
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.tts.TextToSpeech
@@ -13,20 +15,19 @@ import android.view.inputmethod.EditorInfo
 import android.widget.ListView
 import android.widget.ProgressBar
 import android.widget.SimpleAdapter
+import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
-//Библиотека вольфрам
 import com.wolfram.alpha.WAEngine
 import com.wolfram.alpha.WAPlainText
-//Корутина. Аналог postOnUIThread
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.*
-import kotlin.collections.HashMap
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -238,17 +239,24 @@ class MainActivity : AppCompatActivity() {
             startActivityForResult(intent, VOICE_REQUEST_CODE)
         }.onFailure {t ->
             showSnackBar(t.message ?: getString(R.string.error_voice_recognition_unavailable))
-        }.onSuccess {}
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if(requestCode == VOICE_REQUEST_CODE && resultCode == RESULT_OK) {
-            data?.getStringArrayExtra(RecognizerIntent.EXTRA_RESULTS)?.get(0)?.let {question ->
-                var requesting: String = question
-                requestText.setText(requesting)
-                askWolFrame(requesting)
+            val matches: ArrayList<String>? = data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            if(matches?.isEmpty() != true) {
+                requestText.setText(matches?.get(0))
+                matches?.get(0)?.let { askWolFrame(it) }
             }
+
+//            Log.e(TAG, data?.getStringArrayExtra(RecognizerIntent.EXTRA_RESULTS)?.first().toString())
+//            Log.d(TAG, data?.getStringArrayExtra(RecognizerIntent.EXTRA_RESULTS)?.get(0).toString())
+//            data?.getStringArrayExtra(RecognizerIntent.EXTRA_RESULTS)?.get(0)?.let {question ->
+//                requestText.setText(question)
+//                askWolFrame(question)
+//            }
         }
     }
 }
