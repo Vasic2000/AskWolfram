@@ -1,7 +1,12 @@
 package ru.vasic2000.netovoiceassistent
 
-import androidx.appcompat.app.AppCompatActivity
+//Библиотека вольфрам
+//Корутина. Аналог postOnUIThread
+import android.R.attr
+import android.content.Intent
 import android.os.Bundle
+import android.speech.RecognizerIntent
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -10,18 +15,19 @@ import android.view.inputmethod.EditorInfo
 import android.widget.ListView
 import android.widget.ProgressBar
 import android.widget.SimpleAdapter
+import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputEditText
-//Библиотека вольфрам
 import com.wolfram.alpha.WAEngine
 import com.wolfram.alpha.WAPlainText
-//Корутина. Аналог postOnUIThread
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.*
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -36,12 +42,28 @@ class MainActivity : AppCompatActivity() {
 
     val pods = mutableListOf<HashMap<String, String>>()
 
+    lateinit var textToSpeech: TextToSpeech
+    var isTtsReady: Boolean = false
+    val VOICE_REQUEST_CODE: Int = 797
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         initViews()
         initWolframEngine()
+        initTTS()
+    }
+
+    private fun initTTS() {
+        textToSpeech = TextToSpeech(this) {code ->
+            if(code != TextToSpeech.SUCCESS) {
+                Log.e(TAG, "TTS error code: $code")
+                showSnackBar(getString(R.string.error_tts_isnt_ready))
+            }
+            isTtsReady = true
+            textToSpeech.language = Locale.US
+        }
     }
 
     private fun initViews() {
@@ -78,9 +100,24 @@ class MainActivity : AppCompatActivity() {
 
         podsList.adapter = podsAdapter
 
+        podsList.setOnItemClickListener {parent, view, position, id ->
+            if(isTtsReady) {
+                val title = pods[position]["Title"]
+                val content = pods[position]["Content"]
+                textToSpeech.speak(content, TextToSpeech.QUEUE_FLUSH, null, title)
+            }
+        }
+
         val voiceInputButton : FloatingActionButton = findViewById(R.id.voice_input_button)
         voiceInputButton.setOnClickListener {
             Log.d(TAG, "FAB pressed")
+
+            pods.clear()
+            podsAdapter.notifyDataSetChanged()
+            if(isTtsReady) {
+                textToSpeech.stop()
+            }
+            showInpuDialog()
         }
 
         progressBar = findViewById(R.id.progressBar)
@@ -107,6 +144,9 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
             R.id.action_stop -> {
+                if(isTtsReady) {
+                    textToSpeech.stop()
+                }
                 Log.d(TAG, "action_stop")
                 return true
             }
@@ -185,6 +225,38 @@ class MainActivity : AppCompatActivity() {
                     showSnackBar(t.message ?: getString(R.string.error_something_went_wrong))
                 }
             }
+        }
+    }
+
+    fun showInpuDialog() {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.request_hint))
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.US)
+        }
+
+        kotlin.runCatching {
+            startActivityForResult(intent, VOICE_REQUEST_CODE)
+        }.onFailure {t ->
+            showSnackBar(t.message ?: getString(R.string.error_voice_recognition_unavailable))
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if(requestCode == VOICE_REQUEST_CODE && resultCode == RESULT_OK) {
+            val matches: ArrayList<String>? = data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            if(matches?.isEmpty() != true) {
+                requestText.setText(matches?.get(0))
+                matches?.get(0)?.let { askWolFrame(it) }
+            }
+
+//            Log.e(TAG, data?.getStringArrayExtra(RecognizerIntent.EXTRA_RESULTS)?.first().toString())
+//            Log.d(TAG, data?.getStringArrayExtra(RecognizerIntent.EXTRA_RESULTS)?.get(0).toString())
+//            data?.getStringArrayExtra(RecognizerIntent.EXTRA_RESULTS)?.get(0)?.let {question ->
+//                requestText.setText(question)
+//                askWolFrame(question)
+//            }
         }
     }
 }
