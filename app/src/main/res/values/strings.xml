@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">NetoVoiceAssist</string>
+    <string name="app_name">AskWolframApp</string>
 
     <string name="action_stop">Stop</string>
     <string name="action_clear">Clear</string>

@@ -2,7 +2,6 @@ package ru.vasic2000.netovoiceassistent
 
 //Библиотека вольфрам
 //Корутина. Аналог postOnUIThread
-import android.R.attr
 import android.content.Intent
 import android.os.Bundle
 import android.speech.RecognizerIntent
@@ -114,6 +113,7 @@ class MainActivity : AppCompatActivity() {
 
             pods.clear()
             podsAdapter.notifyDataSetChanged()
+
             if(isTtsReady) {
                 textToSpeech.stop()
             }
