@@ -1,4 +1,4 @@
-# NetoVoiceAssistent
+# AskWolframe
 
 Ask Wolframe client app.
 This is an education android project.
