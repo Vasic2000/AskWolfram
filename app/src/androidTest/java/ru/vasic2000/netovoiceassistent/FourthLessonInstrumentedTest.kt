@@ -31,7 +31,7 @@ import java.util.*
  */
 @LargeTest
 @RunWith(AndroidJUnit4::class)
-class `FourthLessonInstrumentedTest.kt` {
+class FourthLessonInstrumentedTest {
 
     @get:Rule
     var activityScenarioRule = IntentsTestRule(MainActivity::class.java)
